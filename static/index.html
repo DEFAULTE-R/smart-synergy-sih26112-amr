@@ -1,58 +1,874 @@
 <!doctype html>
-<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Smart Synergy — AMR System Integration v0.6</title><link rel="stylesheet" href="/style.css"></head>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#08090b">
+  <title>Smart Synergy — Autonomous Warehouse AMR Platform</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+
 <body>
-<header><div><h1>SMART SYNERGY <span>EDGE FLEET</span></h1><p>SIH 26112 · Edge-AI Distributed AMR Coordination · v0.6</p></div><div class="actions"><button onclick="resetSim('distributed', currentScenario)">RESET DISTRIBUTED</button><button class="secondary" onclick="resetSim('stopwait', currentScenario)">RESET STOP-WAIT</button><button class="secondary" onclick="runBenchmark()">RUN FULL BENCHMARK</button>
-<button class="secondary" onclick="runValidation()">RUN 10-TRIAL VALIDATION</button><button class="secondary" onclick="runFairness()">RUN STARVATION TEST</button></div></header>
+
+<header class="siteHeader">
+  <div class="brandBlock">
+    <div class="eyebrow">SMART INDIA HACKATHON 2026 · SIH26112</div>
+    <h1>SMART <span>SYNERGY</span></h1>
+    <p>Autonomous Warehouse AMR Platform</p>
+  </div>
+
+  <div class="headerStatus">
+    <span class="statusDot"></span>
+    <div>
+      <strong>SYSTEM ONLINE</strong>
+      <small>LIVE FLEET DEMONSTRATOR</small>
+    </div>
+  </div>
+</header>
+
 <main>
-<section class="scenario panel"><div class="panelhead"><h2>SCENARIO CONTROL</h2><span id="systemMode">DISTRIBUTED · NORMAL</span></div><div class="scenarioButtons"><button onclick="setScenario('normal')">NORMAL</button><button class="secondary" onclick="setScenario('blockage')">AISLE BLOCKAGE</button><button class="secondary" onclick="setScenario('failure')">AMR FAILURE</button><button class="secondary" onclick="setScenario('comm_loss')">P2P LOSS</button><button class="secondary" onclick="setScenario('stress')">FULL STRESS</button><button class="secondary" onclick="setScenario('sustained_load')">SUSTAINED LOAD</button></div></section>
-<section class="metrics"><div><b id="clock">0.0s</b><small>SIM TIME</small></div><div><b id="done">0</b><small>TASKS DONE</small></div><div><b id="collisions">0</b><small>COLLISIONS</small></div><div><b id="msgs">0</b><small>P2P MESSAGES</small></div><div><b id="replans">0</b><small>LOCAL REPLANS</small></div><div><b id="deadlocks">0</b><small>DEADLOCK RECOVERIES</small></div><div><b id="reassign">0</b><small>TASK REASSIGNMENTS</small></div><div><b id="dropped">0</b><small>DROPPED P2P PACKETS</small></div><div><b id="stale">0</b><small>STALE-PEER HOLDS</small></div><div><b id="blockReassign">0</b><small>BLOCKAGE REASSIGNMENTS</small></div></section>
-<section class="transport panel"><div class="panelhead"><h2>DECENTRALIZED TRANSPORT / REAL UDP LOOPBACK</h2><span id="transportHealth">UDP ACTIVE</span></div><div class="evidence transportEvidence"><div><b id="tpSent">0</b><small>PACKETS SENT</small></div><div><b id="tpRecv">0</b><small>PACKETS RECEIVED</small></div><div><b id="tpDrop">0</b><small>PACKETS DROPPED</small></div><div><b>UDP</b><small>TRANSPORT</small></div><div><b>3</b><small>ROBOT ENDPOINTS</small></div></div><div class="validationNote">Each AMR owns a UDP socket on 127.0.0.1. Coordination consumes only packets received into that AMR's peer-state table; packet loss therefore crosses a real serialized transport boundary. This is still a single-process loopback demonstration, not three physical edge computers.</div></section>
-<section class="benchmark panel"><div class="panelhead"><h2>BENCHMARK / SAME WORKLOAD</h2><span id="benchStatus">NOT RUN</span></div><div class="benchbody"><div><strong>Scenario</strong></div><div><strong>Distributed</strong></div><div><strong>Stop-and-wait</strong></div><div><strong>Improvement</strong></div><div><strong>Collisions</strong></div></div><div id="benchTable" class="benchtable"></div></section>
-<section class="validation panel">
-  <div class="panelhead"><h2>EXPERIMENTAL VALIDATION / PAIRED TRIALS</h2><span id="validationStatus">NOT RUN</span></div>
-  <div class="evidence">
-    <div><b id="valMean">—</b><small>MEAN IMPROVEMENT</small></div>
-    <div><b id="valMedian">—</b><small>MEDIAN IMPROVEMENT</small></div>
-    <div><b id="valCI">—</b><small>95% CI</small></div>
-    <div><b id="valSuccess">—</b><small>SUCCESSFUL PAIRS</small></div>
-    <div><b>20%</b><small>PS TARGET</small></div>
-  </div>
-  <div class="validationNote" id="validationNote">Runs identical seeds through distributed and stop-and-wait modes. Results are evidence for development validation, not a final SIH claim until independently repeated.</div>
-  <div class="benchbody validationHead"><strong>Scenario</strong><strong>Distributed mean</strong><strong>Stop-wait mean</strong><strong>Mean improvement</strong><strong>Completion</strong></div>
-  <div id="validationTable" class="benchtable"></div>
-  <div class="controls validationControls">
-    <button class="secondary" onclick="downloadValidation()">EXPORT VALIDATION JSON</button>
-  </div>
-</section>
-<section class="fairness panel">
-  <div class="panelhead"><h2>FAIRNESS / STARVATION VALIDATION</h2><span id="fairnessStatus">NOT RUN</span></div>
-  <div class="evidence">
-    <div><b id="fairMean">—</b><small>MEAN FAIRNESS INDEX</small></div>
-    <div><b id="fairMin">—</b><small>MIN FAIRNESS INDEX</small></div>
-    <div><b id="fairWait">—</b><small>MAX WAIT TICKS</small></div>
-    <div><b id="fairColl">—</b><small>COLLISION-FREE TRIALS</small></div>
-    <div><b id="fairThroughput">—</b><small>MEAN TASKS / TRIAL</small></div>
-  </div>
-  <div class="validationNote" id="fairnessNote">Continuous-load test uses the sustained workload scenario to expose priority starvation and uneven service.</div>
-  <div id="fairnessTable" class="benchtable"></div>
-  <div class="controls"><button class="secondary" onclick="downloadFairness()">EXPORT FAIRNESS JSON</button></div>
-</section>
-<section class="grid"><div class="panel warehouse"><div class="panelhead"><h2>WAREHOUSE / LIVE FLEET</h2><span id="block">NO ACTIVE BLOCKAGE</span></div><canvas id="map"></canvas></div><div class="panel"><div class="panelhead"><h2>AMR STATUS</h2><span id="network">P2P HEALTHY</span></div><div id="robots"></div><div class="controls"><button class="danger" onclick="failRobot('AMR-2')">INJECT AMR-2 FAILURE</button><button class="networkBtn" onclick="injectNetworkLoss()">INJECT 100% P2P LOSS / 20 TICKS</button><button class="secondary" onclick="downloadRun()">EXPORT RUN JSON</button></div></div><div class="panel"><div class="panelhead"><h2>TASK QUEUE / ALLOCATION</h2></div><div id="tasks"></div></div><div class="panel log"><div class="panelhead"><h2>DECENTRALIZED EVENT LOG</h2></div><div id="log"></div></div></section>
-</main><script src="/app.js"></script>
-<section class="panel validation">
-  <div class="panelhead"><h2>V0.8 EDGE PROCESS + SCENARIO RUNTIME</h2><span id="edgeStatus">NOT STARTED</span></div>
-  <div class="evidence">
-    <div><b id="edgeProcs">—</b><small>OS PROCESSES</small></div>
-    <div><b id="edgeAlive">—</b><small>ALIVE</small></div>
-    <div><b id="edgeSent">—</b><small>UDP SENT</small></div>
-    <div><b id="edgeRecv">—</b><small>UDP RECEIVED</small></div>
-    <div><b id="edgeDone">—</b><small>ALL TASKS</small></div>
-  </div>
-  <div class="controls validationControls">
-    <button class="secondary" onclick="edgeStart()">START 3-PROCESS EDGE DEMO</button>
-    <button class="secondary" onclick="edgeRun()">RUN 12s EDGE TEST</button>
-    <button class="secondary" onclick="edgeStop()">STOP EDGE PROCESSES</button>
-  </div>
-  <div id="edgeTable" class="benchtable"></div>
-</section>
-</body></html>
+
+  <!-- =========================================================
+       HERO
+  ========================================================== -->
+  <section class="hero">
+    <div class="heroCopy">
+      <div class="heroTag">MODULAR AMR · FLEET COORDINATION</div>
+
+      <h2>
+        From <span>Fusion-designed</span>
+        hardware to autonomous
+        warehouse coordination.
+      </h2>
+
+      <p class="heroLead">
+        Three autonomous mobile robots coordinate warehouse tasks,
+        adapt to changing conditions, and recover from failures
+        through decentralized fleet coordination.
+      </p>
+
+      <div class="heroStats">
+        <div>
+          <strong>3</strong>
+          <span>AMRs</span>
+        </div>
+        <div>
+          <strong>50 kg</strong>
+          <span>Payload</span>
+        </div>
+        <div>
+          <strong>650 × 350</strong>
+          <span>Platform mm</span>
+        </div>
+      </div>
+
+      <div class="heroActions">
+        <a href="#fleet" class="primaryAction">EXPLORE LIVE FLEET</a>
+        <a href="#engineering" class="secondaryAction">VIEW ENGINEERING</a>
+      </div>
+    </div>
+
+    <div class="heroVisual">
+      <div class="visualLabel">FUSION DESIGN · UNIVERSAL AMR PLATFORM</div>
+
+      <div class="imagePlaceholder heroImage">
+        <img src="/assets/fusion/hero-amr-transparent.png"
+             alt="Smart Synergy modular autonomous mobile robot with modular attachment designed in Autodesk Fusion">
+      </div>
+
+      <div class="heroCornerData">
+        <span>PART A</span>
+        <span>MODULAR PLATFORM</span>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- =========================================================
+       ENGINEERING STORY
+  ========================================================== -->
+  <section id="engineering" class="sectionBlock">
+
+    <div class="sectionIntro">
+      <div>
+        <div class="sectionKicker">01 · ENGINEERING FOUNDATION</div>
+        <h2>The robot was engineered before the fleet was simulated.</h2>
+      </div>
+
+      <p>
+        Autodesk Fusion connects the physical platform to optimization,
+        simulation, additive manufacturing and prototype validation.
+      </p>
+    </div>
+
+    <div class="engineeringFlow">
+
+      <article class="engineeringCard featured">
+        <div class="cardNumber">01</div>
+        <div class="cardContent">
+          <span>DESIGN</span>
+          <h3>Modular AMR Platform</h3>
+          <p>
+            Universal 4WD base with a common attachment interface
+            for warehouse handling.
+          </p>
+        </div>
+      </article>
+
+      <article class="engineeringCard">
+        <div class="cardNumber">02</div>
+        <div class="cardContent">
+          <span>OPTIMIZATION</span>
+          <h3>Topology + Generative Design</h3>
+          <p>
+            Material-efficient geometry developed around structural
+            requirements and additive manufacturing.
+          </p>
+        </div>
+      </article>
+
+      <article class="engineeringCard">
+        <div class="cardNumber">03</div>
+        <div class="cardContent">
+          <span>VALIDATION</span>
+          <h3>Fusion Simulation</h3>
+          <p>
+            Structural loading, displacement and safety-factor evidence
+            used to validate the modular attachment.
+          </p>
+        </div>
+      </article>
+
+      <article class="engineeringCard">
+        <div class="cardNumber">04</div>
+        <div class="cardContent">
+          <span>MANUFACTURING</span>
+          <h3>DFAM + Prototype</h3>
+          <p>
+            Geometry prepared for additive manufacturing and
+            validated through FDM prototyping.
+          </p>
+        </div>
+      </article>
+
+    </div>
+
+
+    <div class="engineeringEvidence">
+
+      <div class="evidenceImage large">
+        <div class="imagePlaceholder">
+          <img src="/assets/fusion/image2.png"
+               alt="Universal AMR platform designed in Autodesk Fusion">
+        </div>
+        <div class="imageCaption">
+          <span>DESIGN</span>
+          <strong>Universal AMR platform</strong>
+        </div>
+      </div>
+
+      <div class="evidenceImage">
+        <div class="imagePlaceholder">
+          <img src="/assets/fusion/image10.png"
+               alt="Jaw after Generative Design optimization in Autodesk Fusion">
+        </div>
+        <div class="imageCaption">
+          <span>OPTIMIZATION</span>
+          <strong>Generative Design result</strong>
+        </div>
+      </div>
+
+      <div class="evidenceImage">
+        <div class="imagePlaceholder">
+          <img src="/assets/fusion/image11.png"
+               alt="Finite element analysis validation in Autodesk Fusion">
+        </div>
+        <div class="imageCaption">
+          <span>VALIDATION</span>
+          <strong>Fusion FEA structural evidence</strong>
+        </div>
+      </div>
+
+      <div class="evidenceImage">
+        <div class="imagePlaceholder">
+          <img src="/assets/fusion/image9.jpg"
+               alt="3D printed Smart Synergy AMR prototype">
+        </div>
+        <div class="imageCaption">
+          <span>MANUFACTURING</span>
+          <strong>FDM physical prototype</strong>
+        </div>
+      </div>
+
+    </div>
+
+
+    <div class="engineeringNumbers">
+
+      <div class="bigEvidence">
+        <strong>73.3%</strong>
+        <span>BASE MASS REDUCTION</span>
+        <small>5.98 kg → 1.60 kg</small>
+      </div>
+
+      <div class="bigEvidence">
+        <strong>2.312</strong>
+        <span>SAFETY FACTOR</span>
+        <small>Target ≥ 2.00</small>
+      </div>
+
+      <div class="bigEvidence">
+        <strong>490.5 N</strong>
+        <span>APPLIED LOAD</span>
+        <small>Jaw structural validation</small>
+      </div>
+
+      <div class="bigEvidence">
+        <strong>0.381 mm</strong>
+        <span>DISPLACEMENT</span>
+        <small>Fusion simulation result</small>
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- =========================================================
+       FLEET INTRO
+  ========================================================== -->
+  <section id="fleet" class="fleetIntro">
+
+    <div class="fleetIntroCopy">
+      <div class="sectionKicker">02 · FROM ONE ROBOT TO A FLEET</div>
+
+      <h2>
+        The physical platform becomes a
+        <span>coordinated warehouse fleet.</span>
+      </h2>
+
+      <p>
+        The live demonstrator models multiple AMRs sharing tasks,
+        peer state and navigation information while responding to
+        changing warehouse conditions.
+      </p>
+    </div>
+
+    <div class="fleetArchitecture">
+
+      <div class="architectureNode">
+        <strong>AMR-01</strong>
+        <span>Task + State</span>
+      </div>
+
+      <div class="architectureLine"></div>
+
+      <div class="architectureCore">
+        <strong>FLEET</strong>
+        <span>DECENTRALIZED COORDINATION</span>
+      </div>
+
+      <div class="architectureLine"></div>
+
+      <div class="architectureNode">
+        <strong>AMR-02</strong>
+        <span>Task + State</span>
+      </div>
+
+      <div class="architectureNode">
+        <strong>AMR-03</strong>
+        <span>Task + State</span>
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- =========================================================
+       LIVE DEMONSTRATOR
+  ========================================================== -->
+  <section class="liveSection">
+
+    <div class="sectionIntro liveIntro">
+      <div>
+        <div class="sectionKicker">03 · LIVE SYSTEM</div>
+        <h2>Warehouse Fleet Demonstrator</h2>
+      </div>
+
+      <div class="liveStatus">
+        <span class="statusDot"></span>
+        <strong id="systemMode">DISTRIBUTED · NORMAL</strong>
+      </div>
+    </div>
+
+
+    <div class="scenarioBar">
+
+      <div class="scenarioDescription">
+        <span class="scenarioLabel">CURRENT SCENARIO</span>
+        <strong id="scenarioTitle">Normal Operation</strong>
+        <p id="scenarioDescription">
+          AMRs coordinate warehouse tasks under normal operating conditions.
+        </p>
+      </div>
+
+      <div class="scenarioButtons">
+        <button onclick="setScenario('normal')">NORMAL</button>
+        <button class="secondary" onclick="setScenario('blockage')">AISLE BLOCKAGE</button>
+        <button class="secondary" onclick="setScenario('failure')">AMR FAILURE</button>
+        <button class="secondary" onclick="setScenario('comm_loss')">COMMUNICATION LOSS</button>
+        <button class="secondary" onclick="setScenario('stress')">FULL STRESS</button>
+        <button class="secondary" onclick="setScenario('sustained_load')">SUSTAINED LOAD</button>
+      </div>
+
+    </div>
+
+
+    <div class="fleetDashboard">
+
+      <div class="panel warehousePanel">
+
+        <div class="panelhead">
+          <div>
+            <span class="panelKicker">WAREHOUSE DIGITAL TWIN</span>
+            <h3>LIVE FLEET MOVEMENT</h3>
+          </div>
+
+          <span id="block" class="panelStatus">NO ACTIVE BLOCKAGE</span>
+        </div>
+
+        <div class="warehouseCanvasWrap">
+          <canvas id="map"></canvas>
+
+          <div class="mapLegend">
+            <span><i class="legendRobot"></i> AMR</span>
+            <span><i class="legendTask"></i> TASK</span>
+            <span><i class="legendBlock"></i> BLOCKAGE</span>
+            <span><i class="legendRoute"></i> ROUTE</span>
+          </div>
+        </div>
+
+      </div>
+
+
+      <div class="fleetSide">
+
+        <div class="panel statusPanel">
+
+          <div class="panelhead">
+            <div>
+              <span class="panelKicker">FLEET STATUS</span>
+              <h3>AMR HEALTH</h3>
+            </div>
+
+            <span id="network" class="panelStatus">P2P HEALTHY</span>
+          </div>
+
+          <div id="robots"></div>
+
+          <div class="controls">
+            <button class="danger" onclick="failRobot('AMR-2')">
+              INJECT AMR-2 FAILURE
+            </button>
+
+            <button class="networkBtn" onclick="injectNetworkLoss()">
+              INJECT COMMUNICATION LOSS
+            </button>
+          </div>
+
+        </div>
+
+
+        <div class="panel taskPanel">
+
+          <div class="panelhead">
+            <div>
+              <span class="panelKicker">TASK ALLOCATION</span>
+              <h3>WAREHOUSE QUEUE</h3>
+            </div>
+          </div>
+
+          <div id="tasks"></div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- Human-readable live results -->
+    <div class="liveResults">
+
+      <div class="resultCard">
+        <span>FLEET COORDINATION</span>
+        <strong id="msgs">0</strong>
+        <small>peer messages exchanged</small>
+      </div>
+
+      <div class="resultCard">
+        <span>ADAPTIVE NAVIGATION</span>
+        <strong id="replans">0</strong>
+        <small>route replans</small>
+      </div>
+
+      <div class="resultCard">
+        <span>FAULT RECOVERY</span>
+        <strong id="reassign">0</strong>
+        <small>task reassignments</small>
+      </div>
+
+      <div class="resultCard">
+        <span>COLLISION SAFETY</span>
+        <strong id="collisions">0</strong>
+        <small>recorded collisions</small>
+      </div>
+
+    </div>
+
+
+    <div class="secondaryMetrics">
+
+      <div>
+        <strong id="clock">0.0s</strong>
+        <span>SIMULATION TIME</span>
+      </div>
+
+      <div>
+        <strong id="done">0/0</strong>
+        <span>TASKS COMPLETED</span>
+      </div>
+
+      <div>
+        <strong id="deadlocks">0</strong>
+        <span>DEADLOCK RECOVERIES</span>
+      </div>
+
+      <div>
+        <strong id="dropped">0</strong>
+        <span>DROPPED PACKETS</span>
+      </div>
+
+      <div>
+        <strong id="stale">0</strong>
+        <span>STALE-PEER HOLDS</span>
+      </div>
+
+      <div>
+        <strong id="blockReassign">0</strong>
+        <span>BLOCKAGE REASSIGNMENTS</span>
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- =========================================================
+       WHAT THE DEMO VALIDATES
+  ========================================================== -->
+  <section class="validationStory">
+
+    <div class="sectionIntro">
+      <div>
+        <div class="sectionKicker">04 · WHAT THE DEMONSTRATOR VALIDATES</div>
+        <h2>Engineering behaviour, not just software output.</h2>
+      </div>
+
+      <p>
+        Each scenario tests a specific fleet behaviour that matters
+        when autonomous robots operate in a changing warehouse.
+      </p>
+    </div>
+
+    <div class="validationCards">
+
+      <article>
+        <span>01</span>
+        <h3>Task Execution</h3>
+        <p>
+          Robots receive warehouse tasks and navigate toward pickup
+          and drop locations.
+        </p>
+      </article>
+
+      <article>
+        <span>02</span>
+        <h3>Fleet Coordination</h3>
+        <p>
+          AMRs exchange peer state through decentralized communication
+          rather than relying on one central robot controller.
+        </p>
+      </article>
+
+      <article>
+        <span>03</span>
+        <h3>Adaptive Navigation</h3>
+        <p>
+          Blocked paths and changing conditions trigger route replanning
+          and, where required, task reassignment.
+        </p>
+      </article>
+
+      <article>
+        <span>04</span>
+        <h3>Fault Handling</h3>
+        <p>
+          Robot failures and communication loss can be injected to
+          observe recovery behaviour.
+        </p>
+      </article>
+
+    </div>
+
+  </section>
+
+
+  <!-- =========================================================
+       TRANSPORT
+  ========================================================== -->
+  <section class="technicalSection">
+
+    <div class="sectionIntro">
+      <div>
+        <div class="sectionKicker">05 · TECHNICAL EVIDENCE</div>
+        <h2>Decentralized communication</h2>
+      </div>
+
+      <p>
+        The demonstrator uses serialized UDP communication between
+        independent AMR endpoints in a loopback environment.
+      </p>
+    </div>
+
+    <div class="transport panel">
+
+      <div class="panelhead">
+        <div>
+          <span class="panelKicker">TRANSPORT LAYER</span>
+          <h3>REAL UDP LOOPBACK</h3>
+        </div>
+
+        <span id="transportHealth" class="panelStatus">UDP ACTIVE</span>
+      </div>
+
+      <div class="evidence transportEvidence">
+
+        <div>
+          <b id="tpSent">0</b>
+          <small>PACKETS SENT</small>
+        </div>
+
+        <div>
+          <b id="tpRecv">0</b>
+          <small>PACKETS RECEIVED</small>
+        </div>
+
+        <div>
+          <b id="tpDrop">0</b>
+          <small>PACKETS DROPPED</small>
+        </div>
+
+        <div>
+          <b>UDP</b>
+          <small>TRANSPORT</small>
+        </div>
+
+        <div>
+          <b>3</b>
+          <small>ROBOT ENDPOINTS</small>
+        </div>
+
+      </div>
+
+      <div class="validationNote">
+        Each AMR owns a UDP socket on 127.0.0.1. Coordination consumes
+        packets received into that AMR's peer-state table. This is a
+        single-process loopback demonstration, not three physical
+        edge computers.
+      </div>
+
+    </div>
+
+
+    <!-- =======================================================
+         ADVANCED TESTING
+    ======================================================== -->
+
+    <details class="technicalDetails">
+
+      <summary>
+        <span>
+          <strong>ADVANCED VALIDATION &amp; BENCHMARKING</strong>
+          <small>For technical reviewers</small>
+        </span>
+        <b>+</b>
+      </summary>
+
+      <div class="advancedContent">
+
+        <section class="benchmark panel">
+
+          <div class="panelhead">
+            <div>
+              <span class="panelKicker">COMPARATIVE TEST</span>
+              <h3>SAME WORKLOAD BENCHMARK</h3>
+            </div>
+
+            <span id="benchStatus">NOT RUN</span>
+          </div>
+
+          <div class="controls topControls">
+            <button onclick="runBenchmark()">RUN FULL BENCHMARK</button>
+          </div>
+
+          <div class="benchbody">
+            <div><strong>Scenario</strong></div>
+            <div><strong>Distributed</strong></div>
+            <div><strong>Stop-and-wait</strong></div>
+            <div><strong>Improvement</strong></div>
+            <div><strong>Collisions</strong></div>
+          </div>
+
+          <div id="benchTable" class="benchtable"></div>
+
+        </section>
+
+
+        <section class="validation panel">
+
+          <div class="panelhead">
+            <div>
+              <span class="panelKicker">EXPERIMENTAL VALIDATION</span>
+              <h3>PAIRED TRIALS</h3>
+            </div>
+
+            <span id="validationStatus">NOT RUN</span>
+          </div>
+
+          <div class="evidence">
+
+            <div>
+              <b id="valMean">—</b>
+              <small>MEAN IMPROVEMENT</small>
+            </div>
+
+            <div>
+              <b id="valMedian">—</b>
+              <small>MEDIAN IMPROVEMENT</small>
+            </div>
+
+            <div>
+              <b id="valCI">—</b>
+              <small>95% CI</small>
+            </div>
+
+            <div>
+              <b id="valSuccess">—</b>
+              <small>SUCCESSFUL PAIRS</small>
+            </div>
+
+            <div>
+              <b>20%</b>
+              <small>PS TARGET</small>
+            </div>
+
+          </div>
+
+          <div class="validationNote" id="validationNote">
+            Runs identical seeds through distributed and stop-and-wait
+            modes. Results are development validation and should be
+            independently repeated before being presented as final evidence.
+          </div>
+
+          <div class="benchbody validationHead">
+            <strong>Scenario</strong>
+            <strong>Distributed mean</strong>
+            <strong>Stop-wait mean</strong>
+            <strong>Mean improvement</strong>
+            <strong>Completion</strong>
+          </div>
+
+          <div id="validationTable" class="benchtable"></div>
+
+          <div class="controls validationControls">
+            <button class="secondary" onclick="runValidation()">
+              RUN 10-TRIAL VALIDATION
+            </button>
+            <button class="secondary" onclick="downloadValidation()">
+              EXPORT VALIDATION JSON
+            </button>
+          </div>
+
+        </section>
+
+
+        <section class="fairness panel">
+
+          <div class="panelhead">
+            <div>
+              <span class="panelKicker">CONTINUOUS LOAD</span>
+              <h3>FAIRNESS / STARVATION VALIDATION</h3>
+            </div>
+
+            <span id="fairnessStatus">NOT RUN</span>
+          </div>
+
+          <div class="evidence">
+
+            <div>
+              <b id="fairMean">—</b>
+              <small>MEAN FAIRNESS INDEX</small>
+            </div>
+
+            <div>
+              <b id="fairMin">—</b>
+              <small>MIN FAIRNESS INDEX</small>
+            </div>
+
+            <div>
+              <b id="fairWait">—</b>
+              <small>MAX WAIT TICKS</small>
+            </div>
+
+            <div>
+              <b id="fairColl">—</b>
+              <small>COLLISION-FREE TRIALS</small>
+            </div>
+
+            <div>
+              <b id="fairThroughput">—</b>
+              <small>MEAN TASKS / TRIAL</small>
+            </div>
+
+          </div>
+
+          <div class="validationNote" id="fairnessNote">
+            Continuous-load test uses the sustained workload scenario
+            to expose priority starvation and uneven service.
+          </div>
+
+          <div id="fairnessTable" class="benchtable"></div>
+
+          <div class="controls">
+            <button class="secondary" onclick="runFairness()">
+              RUN STARVATION TEST
+            </button>
+            <button class="secondary" onclick="downloadFairness()">
+              EXPORT FAIRNESS JSON
+            </button>
+          </div>
+
+        </section>
+
+
+        <section class="validation panel">
+
+          <div class="panelhead">
+            <div>
+              <span class="panelKicker">EDGE RUNTIME</span>
+              <h3>V0.8 PROCESS + SCENARIO RUNTIME</h3>
+            </div>
+
+            <span id="edgeStatus">NOT STARTED</span>
+          </div>
+
+          <div class="evidence">
+
+            <div>
+              <b id="edgeProcs">—</b>
+              <small>OS PROCESSES</small>
+            </div>
+
+            <div>
+              <b id="edgeAlive">—</b>
+              <small>ALIVE</small>
+            </div>
+
+            <div>
+              <b id="edgeSent">—</b>
+              <small>UDP SENT</small>
+            </div>
+
+            <div>
+              <b id="edgeRecv">—</b>
+              <small>UDP RECEIVED</small>
+            </div>
+
+            <div>
+              <b id="edgeDone">—</b>
+              <small>ALL TASKS</small>
+            </div>
+
+          </div>
+
+          <div class="controls validationControls">
+            <button class="secondary" onclick="edgeStart()">
+              START 3-PROCESS EDGE DEMO
+            </button>
+
+            <button class="secondary" onclick="edgeRun()">
+              RUN 12s EDGE TEST
+            </button>
+
+            <button class="secondary" onclick="edgeStop()">
+              STOP EDGE PROCESSES
+            </button>
+          </div>
+
+          <div id="edgeTable" class="benchtable"></div>
+
+        </section>
+
+      </div>
+
+    </details>
+
+  </section>
+
+
+  <!-- =========================================================
+       EVENT LOG / EXPORT
+  ========================================================== -->
+  <section class="finalEvidence">
+
+    <div class="eventPanel panel">
+
+      <div class="panelhead">
+        <div>
+          <span class="panelKicker">SYSTEM TRACE</span>
+          <h3>DECENTRALIZED EVENT LOG</h3>
+        </div>
+      </div>
+
+      <div id="log"></div>
+
+    </div>
+
+    <div class="finalActions">
+
+      <button class="secondary" onclick="downloadRun()">
+        EXPORT RUN DATA
+      </button>
+
+      <div class="technicalDisclaimer">
+        <strong>Software supporting evidence</strong>
+        <p>
+          This demonstrator supports the multi-AMR coordination and
+          scalability aspect of the project. It does not replace the
+          Autodesk Fusion CAD, optimization, simulation or manufacturing
+          evidence.
+        </p>
+      </div>
+
+    </div>
+
+  </section>
+
+</main>
+
+<script src="/app.js"></script>
+
+</body>
+</html>

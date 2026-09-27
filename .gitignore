@@ -5,3 +5,6 @@ __pycache__/
 .DS_Store
 .vscode/
 .idea/
+
+# Local image-processing environment
+.imgvenv/

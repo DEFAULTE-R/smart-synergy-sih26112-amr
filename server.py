@@ -120,6 +120,27 @@ class Handler(BaseHTTPRequestHandler):
             self.send_file(ROOT / 'static' / 'app.js', 'application/javascript')
         elif path == '/style.css':
             self.send_file(ROOT / 'static' / 'style.css', 'text/css')
+        elif path.startswith('/assets/'):
+            asset = (ROOT / 'static' / path.lstrip('/')).resolve()
+            static_root = (ROOT / 'static').resolve()
+
+            if static_root not in asset.parents or not asset.is_file():
+                self.send_error(404)
+                return
+
+            content_types = {
+                '.png': 'image/png',
+                '.jpg': 'image/jpeg',
+                '.jpeg': 'image/jpeg',
+                '.webp': 'image/webp',
+                '.svg': 'image/svg+xml',
+                '.gif': 'image/gif',
+            }
+
+            self.send_file(
+                asset,
+                content_types.get(asset.suffix.lower(), 'application/octet-stream')
+            )
         else:
             self.send_error(404)
 
