@@ -1,0 +1,58 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Smart Synergy — AMR System Integration v0.6</title><link rel="stylesheet" href="/style.css"></head>
+<body>
+<header><div><h1>SMART SYNERGY <span>EDGE FLEET</span></h1><p>SIH 26112 · Edge-AI Distributed AMR Coordination · v0.6</p></div><div class="actions"><button onclick="resetSim('distributed', currentScenario)">RESET DISTRIBUTED</button><button class="secondary" onclick="resetSim('stopwait', currentScenario)">RESET STOP-WAIT</button><button class="secondary" onclick="runBenchmark()">RUN FULL BENCHMARK</button>
+<button class="secondary" onclick="runValidation()">RUN 10-TRIAL VALIDATION</button><button class="secondary" onclick="runFairness()">RUN STARVATION TEST</button></div></header>
+<main>
+<section class="scenario panel"><div class="panelhead"><h2>SCENARIO CONTROL</h2><span id="systemMode">DISTRIBUTED · NORMAL</span></div><div class="scenarioButtons"><button onclick="setScenario('normal')">NORMAL</button><button class="secondary" onclick="setScenario('blockage')">AISLE BLOCKAGE</button><button class="secondary" onclick="setScenario('failure')">AMR FAILURE</button><button class="secondary" onclick="setScenario('comm_loss')">P2P LOSS</button><button class="secondary" onclick="setScenario('stress')">FULL STRESS</button><button class="secondary" onclick="setScenario('sustained_load')">SUSTAINED LOAD</button></div></section>
+<section class="metrics"><div><b id="clock">0.0s</b><small>SIM TIME</small></div><div><b id="done">0</b><small>TASKS DONE</small></div><div><b id="collisions">0</b><small>COLLISIONS</small></div><div><b id="msgs">0</b><small>P2P MESSAGES</small></div><div><b id="replans">0</b><small>LOCAL REPLANS</small></div><div><b id="deadlocks">0</b><small>DEADLOCK RECOVERIES</small></div><div><b id="reassign">0</b><small>TASK REASSIGNMENTS</small></div><div><b id="dropped">0</b><small>DROPPED P2P PACKETS</small></div><div><b id="stale">0</b><small>STALE-PEER HOLDS</small></div><div><b id="blockReassign">0</b><small>BLOCKAGE REASSIGNMENTS</small></div></section>
+<section class="transport panel"><div class="panelhead"><h2>DECENTRALIZED TRANSPORT / REAL UDP LOOPBACK</h2><span id="transportHealth">UDP ACTIVE</span></div><div class="evidence transportEvidence"><div><b id="tpSent">0</b><small>PACKETS SENT</small></div><div><b id="tpRecv">0</b><small>PACKETS RECEIVED</small></div><div><b id="tpDrop">0</b><small>PACKETS DROPPED</small></div><div><b>UDP</b><small>TRANSPORT</small></div><div><b>3</b><small>ROBOT ENDPOINTS</small></div></div><div class="validationNote">Each AMR owns a UDP socket on 127.0.0.1. Coordination consumes only packets received into that AMR's peer-state table; packet loss therefore crosses a real serialized transport boundary. This is still a single-process loopback demonstration, not three physical edge computers.</div></section>
+<section class="benchmark panel"><div class="panelhead"><h2>BENCHMARK / SAME WORKLOAD</h2><span id="benchStatus">NOT RUN</span></div><div class="benchbody"><div><strong>Scenario</strong></div><div><strong>Distributed</strong></div><div><strong>Stop-and-wait</strong></div><div><strong>Improvement</strong></div><div><strong>Collisions</strong></div></div><div id="benchTable" class="benchtable"></div></section>
+<section class="validation panel">
+  <div class="panelhead"><h2>EXPERIMENTAL VALIDATION / PAIRED TRIALS</h2><span id="validationStatus">NOT RUN</span></div>
+  <div class="evidence">
+    <div><b id="valMean">—</b><small>MEAN IMPROVEMENT</small></div>
+    <div><b id="valMedian">—</b><small>MEDIAN IMPROVEMENT</small></div>
+    <div><b id="valCI">—</b><small>95% CI</small></div>
+    <div><b id="valSuccess">—</b><small>SUCCESSFUL PAIRS</small></div>
+    <div><b>20%</b><small>PS TARGET</small></div>
+  </div>
+  <div class="validationNote" id="validationNote">Runs identical seeds through distributed and stop-and-wait modes. Results are evidence for development validation, not a final SIH claim until independently repeated.</div>
+  <div class="benchbody validationHead"><strong>Scenario</strong><strong>Distributed mean</strong><strong>Stop-wait mean</strong><strong>Mean improvement</strong><strong>Completion</strong></div>
+  <div id="validationTable" class="benchtable"></div>
+  <div class="controls validationControls">
+    <button class="secondary" onclick="downloadValidation()">EXPORT VALIDATION JSON</button>
+  </div>
+</section>
+<section class="fairness panel">
+  <div class="panelhead"><h2>FAIRNESS / STARVATION VALIDATION</h2><span id="fairnessStatus">NOT RUN</span></div>
+  <div class="evidence">
+    <div><b id="fairMean">—</b><small>MEAN FAIRNESS INDEX</small></div>
+    <div><b id="fairMin">—</b><small>MIN FAIRNESS INDEX</small></div>
+    <div><b id="fairWait">—</b><small>MAX WAIT TICKS</small></div>
+    <div><b id="fairColl">—</b><small>COLLISION-FREE TRIALS</small></div>
+    <div><b id="fairThroughput">—</b><small>MEAN TASKS / TRIAL</small></div>
+  </div>
+  <div class="validationNote" id="fairnessNote">Continuous-load test uses the sustained workload scenario to expose priority starvation and uneven service.</div>
+  <div id="fairnessTable" class="benchtable"></div>
+  <div class="controls"><button class="secondary" onclick="downloadFairness()">EXPORT FAIRNESS JSON</button></div>
+</section>
+<section class="grid"><div class="panel warehouse"><div class="panelhead"><h2>WAREHOUSE / LIVE FLEET</h2><span id="block">NO ACTIVE BLOCKAGE</span></div><canvas id="map"></canvas></div><div class="panel"><div class="panelhead"><h2>AMR STATUS</h2><span id="network">P2P HEALTHY</span></div><div id="robots"></div><div class="controls"><button class="danger" onclick="failRobot('AMR-2')">INJECT AMR-2 FAILURE</button><button class="networkBtn" onclick="injectNetworkLoss()">INJECT 100% P2P LOSS / 20 TICKS</button><button class="secondary" onclick="downloadRun()">EXPORT RUN JSON</button></div></div><div class="panel"><div class="panelhead"><h2>TASK QUEUE / ALLOCATION</h2></div><div id="tasks"></div></div><div class="panel log"><div class="panelhead"><h2>DECENTRALIZED EVENT LOG</h2></div><div id="log"></div></div></section>
+</main><script src="/app.js"></script>
+<section class="panel validation">
+  <div class="panelhead"><h2>V0.8 EDGE PROCESS + SCENARIO RUNTIME</h2><span id="edgeStatus">NOT STARTED</span></div>
+  <div class="evidence">
+    <div><b id="edgeProcs">—</b><small>OS PROCESSES</small></div>
+    <div><b id="edgeAlive">—</b><small>ALIVE</small></div>
+    <div><b id="edgeSent">—</b><small>UDP SENT</small></div>
+    <div><b id="edgeRecv">—</b><small>UDP RECEIVED</small></div>
+    <div><b id="edgeDone">—</b><small>ALL TASKS</small></div>
+  </div>
+  <div class="controls validationControls">
+    <button class="secondary" onclick="edgeStart()">START 3-PROCESS EDGE DEMO</button>
+    <button class="secondary" onclick="edgeRun()">RUN 12s EDGE TEST</button>
+    <button class="secondary" onclick="edgeStop()">STOP EDGE PROCESSES</button>
+  </div>
+  <div id="edgeTable" class="benchtable"></div>
+</section>
+</body></html>
