@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: smart-synergy-sih26112-amr
+    runtime: python
+    buildCommand: ""
+    startCommand: python3 server.py
