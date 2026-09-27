@@ -1,7 +1,7 @@
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse, parse_qs
 from pathlib import Path
-import json, threading, time
+import json, threading, time, os
 from simulation import FleetSim, benchmark, validation, fairness_test, SCENARIOS
 from edge_runtime import MultiProcessEdgeDemo, SCENARIOS
 
@@ -140,8 +140,9 @@ def main():
     sim = FleetSim(mode='distributed', scenario='normal', seed=26112)
     edge_demo = MultiProcessEdgeDemo()
     threading.Thread(target=loop, daemon=True).start()
-    print('AMR Fleet v0.9 running at http://127.0.0.1:8007')
-    ThreadingHTTPServer(('127.0.0.1', 8007), Handler).serve_forever()
+    port = int(os.environ.get('PORT', '8007'))
+    print(f'AMR Fleet SIH26112 running on port {port}')
+    ThreadingHTTPServer(('0.0.0.0', port), Handler).serve_forever()
 
 
 if __name__ == '__main__':
